@@ -21,39 +21,28 @@
 
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 20
-#SBATCH --mem=350G
-#SBATCH -J "Nanocompore" 
-#SBATCH -p long
+#SBATCH -c 10
+#SBATCH --mem=50G
+#SBATCH -J "Nanocompore"
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
 
-module load nanopolish
 module load nanocompore
 
-# check if we have 4 arguments
-if [ ! $# == 4 ]; then
-  echo "Usage: $0 [Guppy folder] [Transcript file fasta] [Basecalled FASTQ file] [target dir e.g. /tmp/]"
+# check if we have 5 arguments
+if [ ! $# == 5 ]; then
+  echo "Usage: $0 [Guppy folder] [Transcript file fasta] [Basecalled FASTQ file] [BAM file] [target dir e.g. /tmp/]"
   exit
 fi
 
 # create the target directory
- mkdir $4 -p
-
-# Steps from https://nanocompore.rna.rocks/data_preparation/
-
-# align to reference
-#minimap2 -ax map-ont -L ${2} ${3} | samtools view -bh -F 2324 -q 10 | samtools sort -O bam > $4/aligned.bam
-minimap2 -ax splice -uf -k14 -L ${2} ${3} | samtools view -bh -F 2324 -q 10 | samtools sort -O bam > $4/aligned.bam
-
-# build index
-samtools index $4/aligned.bam
+mkdir $5 -p
 
 # index first with nanopolish index
 nanopolish index -s ${1}/sequencing_summary.txt -d ${1}/workspace ${3}
 
 # realign raw signal to the expected reference sequence
-nanopolish eventalign --threads 40 --reads ${3} --bam $4/aligned.bam --genome ${2} --samples --print-read-names --scale-events --samples | gzip -c --best > ${4}/eventalign_reads.tsv.gz
+nanopolish eventalign --threads 10 --reads ${3} --bam ${4} --genome ${2} --samples --print-read-names --scale-events --samples > ${5}/eventalign_reads.tsv
 
 # data has to be collapsed per kmer and indexed by NanopolishComp Eventalign_collapse
-zcat ${4}/eventalign_reads.tsv.gz | NanopolishComp Eventalign_collapse --threads 40 -o ${4}/
+NanopolishComp Eventalign_collapse -i ${5}/eventalign_reads.tsv -o ${5}/eventalign_collapsed_reads.tsv

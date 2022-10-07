@@ -21,39 +21,26 @@
 
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 20
-#SBATCH --mem=350G
-#SBATCH -J "Nanocompore" 
+#SBATCH -c 40
+#SBATCH --mem=400G
+#SBATCH -J "Nanocompore sampcomp"
 #SBATCH -p long
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
 
-module load nanopolish
 module load nanocompore
 
 # check if we have 4 arguments
 if [ ! $# == 4 ]; then
-  echo "Usage: $0 [Guppy folder] [Transcript file fasta] [Basecalled FASTQ file] [target dir e.g. /tmp/]"
+  echo "Usage: $0 [Transcript file fasta] [YAML] [target dir e.g. /tmp/] [BED file]"
   exit
 fi
 
 # create the target directory
- mkdir $4 -p
+# mkdir $4 -p
 
-# Steps from https://nanocompore.rna.rocks/data_preparation/
+# nanocompore sampcomp --nthreads 80 --allow_warnings --log_level debug --fasta ${1} --sample_yaml ${2} -o ${3}
+#nanocompore sampcomp --allow_warnings --log_level debug --fasta ${1} --sample_yaml ${2} -o ${3} --bed ${4}
 
-# align to reference
-#minimap2 -ax map-ont -L ${2} ${3} | samtools view -bh -F 2324 -q 10 | samtools sort -O bam > $4/aligned.bam
-minimap2 -ax splice -uf -k14 -L ${2} ${3} | samtools view -bh -F 2324 -q 10 | samtools sort -O bam > $4/aligned.bam
+/home/tjakobi/.cache/pypoetry/virtualenvs/nanocompore-NmxgQRJS-py3.6/bin/nanocompore sampcomp --nthreads 60 --allow_warnings --log_level debug --fasta ${1} --sample_yaml ${2} -o ${3} --bed ${4}
 
-# build index
-samtools index $4/aligned.bam
-
-# index first with nanopolish index
-nanopolish index -s ${1}/sequencing_summary.txt -d ${1}/workspace ${3}
-
-# realign raw signal to the expected reference sequence
-nanopolish eventalign --threads 40 --reads ${3} --bam $4/aligned.bam --genome ${2} --samples --print-read-names --scale-events --samples | gzip -c --best > ${4}/eventalign_reads.tsv.gz
-
-# data has to be collapsed per kmer and indexed by NanopolishComp Eventalign_collapse
-zcat ${4}/eventalign_reads.tsv.gz | NanopolishComp Eventalign_collapse --threads 40 -o ${4}/

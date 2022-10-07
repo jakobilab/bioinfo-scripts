@@ -7,6 +7,7 @@
 
 #SBATCH -n 1
 #SBATCH -N 1
+#SBATCH -p long
 #SBATCH -c 40
 #SBATCH --mem=250G
 #SBATCH -J "circtools alignment"

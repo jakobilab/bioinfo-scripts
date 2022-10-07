@@ -7,8 +7,8 @@
 
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 40
-#SBATCH --mem=100G
+#SBATCH -c 8
+#SBATCH --mem=50G
 #SBATCH -J "circtools reconstruct denovo"
 #SBATCH -p general
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
@@ -23,4 +23,4 @@ fi
 #guided_denovo_circle_structure_parallel -c 40 -A ${1} -I ${2} -N ${3} 
 #guided_denovo_circle_structure_parallel -A ${1} -c 1 -I ${2} -N ${3} -T /scratch/global_tmp/ 
 #/home/tjakobi/tmp/guided_denovo_circle_structure_parallel.py -c 40 -I ${1} -N ${2} -T /scratch/global_tmp/ 
-guided_denovo_circle_structure_parallel -c 40 -I ${1} -N ${2} -T /scratch/global_tmp/ 
+guided_denovo_circle_structure_parallel -c 8 -I ${1} -N ${2} -T /scratch/global_tmp/ 

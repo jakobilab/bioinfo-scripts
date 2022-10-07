@@ -23,13 +23,14 @@
 #SBATCH -N 1
 #SBATCH -c 10
 #SBATCH -p gpu
-#SBATCH --mem=40G
-#SBATCH -J "taiyaki"
+#SBATCH --mem=120G
+#SBATCH -J "Taiyaki"
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
 #SBATCH --gres=gpu:tesla:1
 
-module unload cuda
+
+#module load cuda/9.2
 
 
 ################################################################################################
@@ -55,38 +56,41 @@ echo "==== End of GPU information ===="
 echo ""
 #################################################################################################
 
-
+module unload cuda
 module load taiyaki
 
-
-# check if we have 6 arguments
-if [ ! $# == 3 ]; then
-  echo "Usage: $0 [READ dir] [OUT dir]"
+# check if we have 4 arguments
+if [ ! $# == 4 ]; then
+  echo "Usage: $0 [Read directory (FAST5)] [target dir e.g. /tmp/] [pretrained model] [FASTA read training set]"
   exit
 fi
 
-CUDA_VISIBLE_DEVICES=0
-
 reads=$1
 out=$2
+pretrained_model=$3
+fasta_file=$4
+
+#CUDA_VISIBLE_DEVICES=0
 
 # create the target directory
 mkdir $out -pv
 
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
+#echo "======== generate per read params"
 
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint $out/modbase.hdf5
+#time generate_per_read_params.py --jobs 30 $reads > $out/modbase.tsv
 
-basecall.py --alphabet ACGT --device $CUDA_VISIBLE_DEVICES --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
+#echo "======== prepare mapped reads"
 
-#train_flipflop.py --device cpu --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
+#time prepare_mapped_reads.py --jobs 30 --overwrite --alphabet ACGT --mod Y A 6mA $reads $out/modbase.tsv $out/modbase.hdf5 $pretrained_model $fasta_file
 
-# Second round: starting from model we just trained
-#train_flipflop.py --device 0 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint modbase.hdf5
+echo "======== training1"
 
-# Basecalling
-#basecall.py --device $cuda_dev --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
+time train_flipflop.py --min_sub_batch_size 48 --full_filter_status --overwrite --device 0 --chunk_len_min 10000 --chunk_len_max 20000 --size 256 --stride 10 --winlen 31 --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
 
-# compress base calls
-pigz -p 40 $out/basecalls.fa
+echo "======== training2"
+
+time train_flipflop.py --min_sub_batch_size 48 --full_filter_status --overwrite --device 0 --chunk_len_min 10000 --chunk_len_max 20000 --size 256 --stride 10 --winlen 31 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint $out/modbase.hdf5
+
+#echo "======== basecall"
+#time basecall.py --alphabet ACGT --device 0 --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
 

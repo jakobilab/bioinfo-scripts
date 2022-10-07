@@ -8,15 +8,17 @@
 # - The number after the clon specifies the number of GPUs required,
 # e.g. something between 1 and 4
 
-#SBATCH --gres=gpu:tesla:1
+#SBATCH --gres=gpu:pascal:1
 
 # Modifiy other SLURM variables as needed
 
 #SBATCH --partition=gpu
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 4
-#SBATCH --mem=4G
+#SBATCH -c 10
+#SBATCH --mem=60G
+#SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
+#SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
 
 # Template for SLURM GPU handling scripts
 # From https://techfak.net/gpu-cluster
@@ -58,18 +60,20 @@ if [ ! $# == 5 ]; then
   exit
 fi
 
-guppy_basecaller	--qscore_filtering \
-                        --trim_strategy 'none'\
+guppy_basecaller	--trim_strategy none\
 			--verbose_logs \
 			--compress_fastq \
 			--fast5_out \
 			-r \
 			-i ${1} \
 			-s ${2} \
-			--flowcell ${4} \
-			--kit ${3} \
+			--reverse_sequence yes\
 			--model_file ${5} \
 			--num_callers 4 \
-			--gpu_runners_per_device 3 \
-			--cpu_threads_per_caller 1 \
-			--device auto
+                        --chunks_per_runner 768 \
+                        --chunk_size 500 \
+			--gpu_runners_per_device 8 \
+			--cpu_threads_per_caller 10 \
+			--device auto \
+                        --flowcell ${4} \
+                        --kit ${3}

@@ -33,13 +33,13 @@ dcc_out_dir=$5
 #######################
 
 main_bam=$dcc_dir/${sample_name}_STARmapping.bam
-main_junction=$dcc_dir/${sample_name}_STARmappingChimeric.out.junction
+main_junction=$dcc_dir/${sample_name}_STARmapping.Chimeric.out.junction
 
 mate1_bam=$dcc_dir/${sample_name}_mate1_STARmapping.bam
-mate1_junction=$dcc_dir/${sample_name}_mate1_STARmappingChimeric.out.junction
+mate1_junction=$dcc_dir/${sample_name}_mate1_STARmapping.Chimeric.out.junction
 
 mate2_bam=$dcc_dir/${sample_name}_mate2_STARmapping.bam
-mate2_junction=$dcc_dir/${sample_name}_mate2_STARmappingChimeric.out.junction.fixed
+mate2_junction=$dcc_dir/${sample_name}_mate2_STARmapping.Chimeric.out.junction.fixed
 
 merged_bam=$main_out/${sample_name}_merged.bam
 
@@ -53,5 +53,6 @@ samtools merge -l 9 -@ 40 $merged_bam $main_bam $mate1_bam $mate2_bam
 # re-index the newly aggregated BAM file
 samtools index $merged_bam
 
-FUCHS -N $sample_name -D $dcc_out_dir/CircRNACount -B $merged_bam -A $bed_file -O $main_out -F $mate2_junction -R $mate2_junction -J $main_junction -T $tmp_folder -p ensembl -r 2 -e 3 -q 2 -P 40
+# FUCHS -N $sample_name -D $dcc_out_dir/CircRNACount -B $merged_bam -A $bed_file -O $main_out -F $mate2_junction -R $mate2_junction -J $main_junction -T $tmp_folder -p ensembl -r 2 -e 3 -q 2 -P 40
+/beegfs/homes/tjakobi/FUCKS/bin/FUCHS -N $sample_name -D $dcc_out_dir/CircRNACount -B $merged_bam -A $bed_file -O $main_out -F $mate2_junction -R $mate2_junction -J $main_junction -T $tmp_folder -p ensembl -r 2 -e 3 -q 2 -P 40
 

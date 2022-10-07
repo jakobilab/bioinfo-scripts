@@ -21,15 +21,14 @@
 
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 10
+#SBATCH -c 20
 #SBATCH -p gpu
-#SBATCH --mem=40G
-#SBATCH -J "taiyaki"
+#SBATCH --mem=120G
+#SBATCH -J "bonito train multiGPU"
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
-#SBATCH --gres=gpu:tesla:1
+#SBATCH --gres=gpu:tesla:4
 
-module unload cuda
 
 
 ################################################################################################
@@ -55,38 +54,24 @@ echo "==== End of GPU information ===="
 echo ""
 #################################################################################################
 
+module unload cuda
+module unload taiyaki
+module unload guppy
 
-module load taiyaki
+module load cuda/9.2
+module load bonito
 
-
-# check if we have 6 arguments
-if [ ! $# == 3 ]; then
-  echo "Usage: $0 [READ dir] [OUT dir]"
+# check if we have 4 arguments
+if [ ! $# == 2 ]; then
+  echo "Usage: $0 [Input dir] [Output dir]"
   exit
 fi
 
-CUDA_VISIBLE_DEVICES=0
-
-reads=$1
-out=$2
+INPUT=$1
+OUTPUT=$2
 
 # create the target directory
-mkdir $out -pv
 
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
-
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint $out/modbase.hdf5
-
-basecall.py --alphabet ACGT --device $CUDA_VISIBLE_DEVICES --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
-
-#train_flipflop.py --device cpu --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
-
-# Second round: starting from model we just trained
-#train_flipflop.py --device 0 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint modbase.hdf5
-
-# Basecalling
-#basecall.py --device $cuda_dev --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
-
-# compress base calls
-pigz -p 40 $out/basecalls.fa
+bonito train --amp --multi-gpu --batch 200 $OUTPUT --config /biosw/bonito/0.2.3/lib/python3.6/site-packages/bonito/models/configs/quartznet5x5_ACGTY.toml --directory $INPUT
+#bonito train --amp --multi-gpu --batch 256 $OUTPUT --config /biosw/bonito/0.2.3/lib/python3.6/site-packages/bonito/models/configs/quartznet5x5.toml --directory $INPUT
 

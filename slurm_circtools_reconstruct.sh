@@ -10,25 +10,28 @@
 #SBATCH -c 40
 #SBATCH --mem=250G
 #SBATCH -J "circtools reconstruct"
-#SBATCH -p long
+#SBATCH -p long 
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
 
 # check if we have 5 arguments
 if [ ! $# == 5 ]; then
-  echo "Usage: $0 [Sample name] [target dir e.g. /path/to/data/] [BED file] [DCC dirrectory] [CircRNACount directory]"
+  echo "Usage: $0 [Sample name] [target dir e.g. /path/to/data/] [BED file] [DCC directory] [CircRNACount directory]"
   exit
 fi
 
-#module load circtools
+module load circtools
 module load samtools
 
 main_out=$2/
 sample_name=$1
 bed_file=$3
 dcc_dir=$4
-tmp_folder=/scratch/global_tmp/
+tmp_folder=/scratch/global_tmp/$sample_name/
 dcc_out_dir=$5
+
+mkdir -p $main_out
+mkdir -p $tmp_folder
 
 #######################
 
@@ -48,10 +51,11 @@ merged_bam=$main_out/${sample_name}_merged.bam
 # preprocessing
 
 # merge both mate BAM files into one new BAM file
-samtools merge -l 9 -@ 40 $merged_bam $main_bam $mate1_bam $mate2_bam
+#samtools merge -l 9 -@ 40 $merged_bam $main_bam $mate1_bam $mate2_bam
 
 # re-index the newly aggregated BAM file
-samtools index $merged_bam
+#samtools index $merged_bam
 
 FUCHS -N $sample_name -D $dcc_out_dir/CircRNACount -B $merged_bam -A $bed_file -O $main_out -F $mate2_junction -R $mate2_junction -J $main_junction -T $tmp_folder -p ensembl -r 2 -e 3 -q 2 -P 40
 
+rm /scratch/global_tmp/$sample_name/ -rf

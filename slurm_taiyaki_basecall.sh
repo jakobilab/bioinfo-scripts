@@ -27,10 +27,7 @@
 #SBATCH -J "taiyaki"
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
 #SBATCH --mail-user=tobias.jakobi@med.uni-heidelberg.de
-#SBATCH --gres=gpu:tesla:1
-
-module unload cuda
-
+#SBATCH --gres=gpu:pascal:1
 
 ################################################################################################
 echo "==== Start of GPU information ===="
@@ -55,29 +52,31 @@ echo "==== End of GPU information ===="
 echo ""
 #################################################################################################
 
-
+module unload cuda
 module load taiyaki
-
 
 # check if we have 6 arguments
 if [ ! $# == 3 ]; then
-  echo "Usage: $0 [READ dir] [OUT dir]"
+  echo "Usage: $0 [READ dir] [TRAIN dir] [OUT dir]"
   exit
 fi
 
-CUDA_VISIBLE_DEVICES=0
-
 reads=$1
-out=$2
+out=$3
+train=$2
+
 
 # create the target directory
-mkdir $out -pv
+#mkdir $out -pv
 
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
+#train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
 
-train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint $out/modbase.hdf5
+#train_flipflop.py --full_filter_status --overwrite --device $CUDA_VISIBLE_DEVICES --chunk_len_min 2000 --chunk_len_max 4000 --size 256 --stride 10 --winlen 31 --min_sub_batch_size 48 --mod_factor 0.1 --outdir $out/training2 $out/training/model_final.checkpoint $out/modbase.hdf5
 
-basecall.py --alphabet ACGT --device $CUDA_VISIBLE_DEVICES --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
+#basecall.py --alphabet ACGT --device $CUDA_VISIBLE_DEVICES --modified_base_output $out/basecalls_full.hdf5 $reads $out/training2/model_final.checkpoint  | gzip -c > $out/basecalls_full.fa.gz
+#echo XXX${CUDA_VISIBLE_DEVICES}XXX
+
+basecall.py --alphabet ACGT --device cuda:0 --modified_base_output $out/basecalls.hdf5 $reads $train/training2/model_final.checkpoint > $out/basecalls.fa
 
 #train_flipflop.py --device cpu --mod_factor 0.01 --outdir $out/training /biosw/taiyaki/5.0.1/models/mGru_cat_mod_flipflop.py $out/modbase.hdf5
 
@@ -88,5 +87,5 @@ basecall.py --alphabet ACGT --device $CUDA_VISIBLE_DEVICES --modified_base_outpu
 #basecall.py --device $cuda_dev --modified_base_output $out/basecalls.hdf5 $reads $out/training2/model_final.checkpoint  > $out/basecalls.fa
 
 # compress base calls
-pigz -p 40 $out/basecalls.fa
+#pigz -p 40 $out/basecalls.fa
 
