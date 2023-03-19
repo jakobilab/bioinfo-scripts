@@ -177,7 +177,6 @@ STAR	--runThreadN 16\
 	--outReadsUnmapped Fastx\
 	--outSAMattributes NH   HI   AS   nM   NM   MD   jM   jI   XS\
 	--outSJfilterOverhangMin 15   15   15   15\
-	--chimMultimapNmax 20\
 	--outFilterScoreMin 1\
 	--outFilterMatchNminOverLread 0.7\
 	--outFilterMismatchNmax 999\
