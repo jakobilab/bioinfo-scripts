@@ -37,7 +37,7 @@ OLD_PATH=`pwd`
 
 # main mapping part
 
-STAR	--runThreadN 8\
+STAR	--runThreadN 16\
 	--genomeDir $1\
 	--genomeLoad NoSharedMemory\
 	--outTmpDir ${TMP_RND}_${target}/\
@@ -48,7 +48,6 @@ STAR	--runThreadN 8\
 	--outSAMattributes NH   HI   AS   nM   NM   MD   jM   jI   XS\
 	--outSJfilterOverhangMin 15   15   15   15\
 	--outFilterMultimapNmax 20\
-	--chimMultimapNmax 20\
 	--outFilterScoreMin 1\
 	--outFilterMatchNminOverLread 0.7\
 	--outFilterMismatchNmax 999\
@@ -105,7 +104,7 @@ cd $OLD_PATH
 ## mapping mate1 now
 
 
-STAR	--runThreadN 8\
+STAR	--runThreadN 16\
 	--genomeDir $1\
 	--genomeLoad NoSharedMemory\
 	--outTmpDir ${TMP_RND}_${target}_mate1/\
@@ -116,7 +115,6 @@ STAR	--runThreadN 8\
 	--outSAMattributes NH   HI   AS   nM   NM   MD   jM   jI   XS\
 	--outSJfilterOverhangMin 15   15   15   15\
 	--outFilterMultimapNmax 20\
-	--chimMultimapNmax 20\
 	--outFilterScoreMin 1\
 	--outFilterMatchNminOverLread 0.7\
 	--outFilterMismatchNmax 999\
@@ -169,7 +167,7 @@ cd $OLD_PATH
 
 ## mapping mate2 now
 
-STAR	--runThreadN 8\
+STAR	--runThreadN 16\
 	--genomeDir $1\
 	--genomeLoad NoSharedMemory\
 	--outTmpDir ${TMP_RND}_${target}_mate2/\
@@ -179,7 +177,6 @@ STAR	--runThreadN 8\
 	--outReadsUnmapped Fastx\
 	--outSAMattributes NH   HI   AS   nM   NM   MD   jM   jI   XS\
 	--outSJfilterOverhangMin 15   15   15   15\
-	--outFilterMultimapNmax 20\
 	--chimMultimapNmax 20\
 	--outFilterScoreMin 1\
 	--outFilterMatchNminOverLread 0.7\
