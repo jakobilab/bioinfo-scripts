@@ -7,8 +7,8 @@
 #SBATCH -n 1
 #SBATCH -N 1
 #SBATCH -c 8
-#SBATCH --mem=250G
-#SBATCH -J "circtools alignment"
+#SBATCH --mem=50G
+#SBATCH -J "STAR alignment"
 
 # check if we have 6 arguments
 if [ ! $# == 6 ]; then
@@ -66,7 +66,7 @@ STAR	--runThreadN 8\
 	--sjdbGTFfile $6\
 	--quantMode GeneCounts\
 	--twopassMode Basic\
-	--chimOutType Junctions
+	--chimOutType Junctions SeparateSAMold
 
 cd $4/$target
 
@@ -134,7 +134,7 @@ STAR	--runThreadN 8\
 	--sjdbGTFfile $6\
 	--quantMode GeneCounts\
 	--twopassMode Basic\
-	--chimOutType Junctions
+	--chimOutType Junctions SeparateSAMold
 
 cd $4/$target/mate1/
 
@@ -198,7 +198,7 @@ STAR	--runThreadN 8\
 	--sjdbGTFfile $6\
 	--quantMode GeneCounts\
 	--twopassMode Basic\
-	--chimOutType Junctions
+	--chimOutType Junctions SeparateSAMold
 
 cd $4/$target/mate2/
 
