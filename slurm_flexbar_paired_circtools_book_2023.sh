@@ -2,16 +2,12 @@
 
 # @Author: Tobias Jakobi <tjakobi>
 # @Email:  tjakobi@arizona.edu
-# @Project: University Hospital Heidelberg, Section of Bioinformatics and Systems Cardiology
-# @License: CC BY-NC-SA
 
 #SBATCH -n 1
 #SBATCH -N 1
-#SBATCH -c 15
-#SBATCH --mem=20G
-#SBATCH -J "flexbar paired"
-#SBATCH --mail-type=END,FAIL,TIME_LIMIT_80
-#SBATCH --mail-user=tjakobi@arizona.edu
+#SBATCH -c 
+#SBATCH --mem=8G
+#SBATCH -J "flexbar"
 
 # check if we have 3 arguments
 if [ ! $# == 4 ]; then
@@ -28,16 +24,10 @@ fi
 # (works for double extension, e.g. .fastq.gz)
 target=`expr ${1/$4/} : '\(.*\)\..*\.'`
 
-# load the flexbar module
-module load flexbar
-
 # run on 10 CPUs
 # compress with bz2
 # only 30nt or longer
 # no uncalled bases
 # quality min phred 28
 # use sanger quality values (i.e. Illumina 1.9+ encoding)
-#flexbar -r $1 -p $2 -t $3/$target  -n 20 -z GZ -m 30 -u 0 -qt 28 -a /biosw/flexbar/Adapter.fa -qf sanger
-#flexbar -r $1 -p $2 -t $3/$target  -n 20 -z GZ -m 30 -u 0 -q 28 -a /biosw/flexbar/Adapter.fa -f sanger -j 
-flexbar -r $1 -p $2 -t $3/$target  -n 15 -z GZ -m 30 -u 0  -q TAIL -qt 28 -as "AGATCGGAAGAG" -qf sanger -j
-#flexbar -r $1 -p $2 -t $3/$target  -n 20 -z GZ -m 30 -u 0  -q TAIL -qt 28 -a /biosw/flexbar/Adapter.fa -qf sanger -j
+flexbar -r $1 -p $2 -t $3/$target  -n 8 -z GZ -m 30 -u 0  -q TAIL -qt 28 -as "AGATCGGAAGAG" -qf sanger -j
